@@ -41,7 +41,7 @@ export default function LoginPage() {
     localStorage.setItem(
       "flora-user",
       JSON.stringify({
-        user: foundUser.usuario,
+        name: foundUser.usuario, // ← Cambiado de "user" a "name"
         role: foundUser.role,
       })
     );
@@ -59,7 +59,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#07120b]">
       <div className="w-full max-w-md bg-[#0d1c11] border border-green-900 rounded-xl p-8">
-        
+
         <h1 className="text-3xl font-bold text-white text-center mb-2">
           Vivero HJ
         </h1>
@@ -70,7 +70,6 @@ export default function LoginPage() {
 
         <div className="space-y-4">
 
-          {/* Usuario */}
           <input
             type="text"
             placeholder="Usuario"
@@ -79,7 +78,6 @@ export default function LoginPage() {
             className="w-full p-3 rounded-lg bg-[#132217] text-white outline-none"
           />
 
-          {/* Password */}
           <input
             type="password"
             placeholder="Contraseña"
@@ -88,7 +86,6 @@ export default function LoginPage() {
             className="w-full p-3 rounded-lg bg-[#132217] text-white outline-none"
           />
 
-          {/* Botón */}
           <button
             type="button"
             onClick={handleLogin}
