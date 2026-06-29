@@ -23,14 +23,24 @@ export default function HomePage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // 🔥 validación SIN useState de control
+  const isAuthenticated =
+    typeof window !== "undefined" &&
+    localStorage.getItem("flora-user") !== null;
 
- useEffect(() => {
-  const user = localStorage.getItem("flora-user");
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, router]);
 
-  if (!user) {
-    router.replace("/");
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#111a11] text-white">
+        Cargando...
+      </div>
+    );
   }
-}, [router]);
 
   return (
     <main className="min-h-screen bg-[#111a11] text-white flex">
@@ -40,21 +50,11 @@ export default function HomePage() {
       />
 
       <section className="flex-1 p-3 md:p-8">
-        <Navbar
-          onMenuClick={() => setSidebarOpen(true)}
-        />
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* KPI */}
-        <div
-          className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            xl:grid-cols-4
-            gap-3
-            mb-5
-          "
-        >
+        <div className="
+          grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5
+        ">
           <DashboardCard
             title="Disponibles"
             value="318"
@@ -98,15 +98,9 @@ export default function HomePage() {
 
         <InventoryTable />
 
-        <div
-          className="
-            grid
-            grid-cols-1
-            xl:grid-cols-[1fr_260px]
-            gap-4
-            mt-4
-          "
-        >
+        <div className="
+          grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-4 mt-4
+        ">
           <SalesChart />
           <CategoryChart />
         </div>
