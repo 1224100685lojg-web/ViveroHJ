@@ -5,14 +5,15 @@
   "author": "Vivero HJ",
   "private": true,
   "main": "electron/main.js",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build --webpack",
-    "start": "next start",
-    "lint": "eslint",
-    "electron": "electron .",
-    "electron:build": "electron-builder"
-  },
+"scripts": {
+  "dev": "next dev",
+  "build": "next build --webpack",
+  "vercel-build": "next build --webpack",
+  "start": "next start",
+  "lint": "eslint",
+  "electron": "electron .",
+  "electron:build": "electron-builder"
+},
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
     "framer-motion": "^12.40.0",
