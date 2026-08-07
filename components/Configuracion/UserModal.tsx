@@ -410,54 +410,53 @@ placeholder="correo generado automáticamente"
 
 
 
-          <div>
+<div>
+  <label className="text-sm text-white/60">
+    Rol
+  </label>
 
-            <label className="text-sm text-white/60">
-              Rol
-            </label>
+  <select
+    value={rol}
+    onChange={(e) => setRol(e.target.value)}
+    className="
+      mt-2
+      w-full
+      rounded-xl
+      bg-[#1b2b1b]
+      border
+      border-white/10
+      px-4
+      py-3
+      text-white
+      appearance-none
+      outline-none
+      focus:border-[#6db56d]
+      focus:ring-2
+      focus:ring-[#6db56d]/30
+    "
+  >
+    <option
+      value="empleado"
+      className="bg-[#132013] text-white"
+    >
+      Empleado
+    </option>
 
+    <option
+      value="supervisor"
+      className="bg-[#132013] text-white"
+    >
+      Supervisor
+    </option>
 
-            <select
-
-              value={rol}
-
-              onChange={(e)=>setRol(e.target.value)}
-
-              className="
-                mt-2
-                w-full
-                rounded-xl
-                bg-black/20
-                border
-                border-white/10
-                px-4
-                py-3
-                text-white
-                outline-none
-                focus:border-[#6db56d]
-              "
-
-            >
-
-              <option value="empleado">
-                Empleado
-              </option>
-
-              <option value="supervisor">
-                Supervisor
-              </option>
-
-              <option value="administrador">
-                Administrador
-              </option>
-
-
-            </select>
-
-
-          </div>
-
-
+    <option
+      value="administrador"
+      className="bg-[#132013] text-white"
+    >
+      Administrador
+    </option>
+  </select>
+</div>
 
 
           {usuario && (

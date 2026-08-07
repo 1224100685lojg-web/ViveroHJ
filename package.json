@@ -1,18 +1,24 @@
 {
   "name": "vivero",
   "version": "0.1.0",
+  "description": "Sistema de control de inventario Vivero HJ",
+  "author": "Vivero HJ",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "electron": "electron .",
+    "electron:build": "electron-builder"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "next-pwa": "^5.6.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.8.1"
@@ -22,9 +28,50 @@
     "@types/node": "^20.19.43",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3",
+    "electron-is-dev": "^3.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "typescript": "^5.9.3"
+  },
+  "build": {
+    "appId": "com.viverohj.sistema",
+    "productName": "Vivero HJ",
+    "icon": "electron/assets/icon.ico",
+    "files": [
+      "electron/**/*",
+      ".next/**/*",
+      "public/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": ".next",
+        "to": "app/.next"
+      },
+      {
+        "from": "public",
+        "to": "app/public"
+      },
+      {
+        "from": "node_modules",
+        "to": "app/node_modules"
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

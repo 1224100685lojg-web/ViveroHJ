@@ -72,15 +72,15 @@ function icono() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
 
-      <div className="w-full max-w-2xl rounded-2xl border border-[#274127] bg-[#111a11] shadow-2xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#274127] bg-[#111a11] shadow-2xl">
 
         {/* HEADER */}
 
-        <div className="flex items-center justify-between border-b border-[#274127] p-6">
+        <div className="flex items-center justify-between border-b border-[#274127] p-4 sm:p-6">
 
           <div>
 
-            <h2 className="text-2xl font-semibold text-white">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white">
               Detalle del movimiento
             </h2>
 
@@ -101,9 +101,9 @@ function icono() {
 
         {/* CONTENIDO */}
 
-        <div className="space-y-5 p-6">
+        <div className="space-y-5 p-4 sm:p-6">
 
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
             <div className="rounded-xl border border-[#274127] bg-[#162616] p-4">
 
@@ -140,7 +140,7 @@ function icono() {
 
           </div>
 
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
             <div className="rounded-xl border border-[#274127] bg-[#162616] p-4">
 
