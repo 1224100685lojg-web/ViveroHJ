@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar";
+
 import DashboardCard from "@/components/DashboardCard";
 import InventoryTable from "@/components/Tables/InventoryTable";
-import SalesChart from "@/components/Charts/SalesChart";
+import SalesChart from "@/components/Charts/InventoryChart";
 import CategoryChart from "@/components/Charts/CategoryChart";
+import Image from "next/image";
+
+import { obtenerDashboardStats } from "@/lib/dashboard";
 
 import {
   Sprout,
@@ -17,103 +19,314 @@ import {
   Coins,
 } from "lucide-react";
 
+
 type User = {
   name: string;
   role: "admin" | "empleado";
 };
 
+
+
 export default function HomePage() {
+
+
   const router = useRouter();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // 👇 estado derivado sin setState en useEffect
-  const [user, setUser] = useState<User | null>(null);
+
+
+
+  const [user, setUser] =
+    useState<User | null>(null);
+
+
+
+  const [stats, setStats] = useState({
+
+    disponibles: 0,
+
+    bajoStock: 0,
+
+    agotados: 0,
+
+    valorTotal: 0,
+
+  });
+
+
+
+
+
 
   useEffect(() => {
-    const stored = localStorage.getItem("flora-user");
+
+
+    const stored =
+      localStorage.getItem("flora-user");
+
+
 
     if (!stored) {
+
       router.replace("/");
+
       return;
+
     }
 
-    const parsed: User = JSON.parse(stored);
 
-    // ✔ evitamos warning moviendo el estado a una sola actualización
+
+    const parsed: User =
+      JSON.parse(stored);
+
+
+
     queueMicrotask(() => {
+
       setUser(parsed);
+
     });
+
+
+
   }, [router]);
 
+
+
+
+
+
+
+  useEffect(() => {
+
+
+    async function cargarStats() {
+
+
+      const {
+        data,
+        error,
+      } =
+      await obtenerDashboardStats();
+
+
+
+      if(error || !data){
+
+        console.error(error);
+
+        return;
+
+      }
+
+
+
+      setStats(data);
+
+
+    }
+
+
+
+    cargarStats();
+
+
+
+  }, []);
+
+
+
+
+
+
+
+
   if (!user) {
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#111a11] text-white">
+
+      <div
+        className="
+          min-h-screen
+          flex
+          items-center
+          justify-center
+          bg-[#111a11]
+          text-white
+        "
+      >
+
         Cargando...
+
       </div>
+
     );
+
   }
 
-  return (
-    <main className="min-h-screen bg-[#111a11] text-white flex">
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
 
-      <section className="flex-1 p-3 md:p-8">
-        <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* KPI */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
-          <DashboardCard
-            title="Disponibles"
-            value="318"
-            subtitle="+22 este mes"
-            subtitleColor="#6db56d"
-            icon={<Sprout size={16} />}
-            iconBg="rgba(107,181,107,0.15)"
-            iconColor="#a8d5a8"
-          />
 
-          <DashboardCard
-            title="Bajo stock"
-            value="14"
-            subtitle="Revisar pronto"
-            subtitleColor="#fac775"
-            icon={<AlertTriangle size={16} />}
-            iconBg="rgba(239,159,39,0.15)"
-            iconColor="#fac775"
-          />
 
-          <DashboardCard
-            title="Agotados"
-            value="5"
-            subtitle="Acción requerida"
-            subtitleColor="#f09595"
-            icon={<Ban size={16} />}
-            iconBg="rgba(226,75,74,0.15)"
-            iconColor="#f09595"
-          />
 
-          <DashboardCard
-            title="Valor total"
-            value="$94K"
-            subtitle="+3.1% mes ant."
-            subtitleColor="#9fe1cb"
-            icon={<Coins size={16} />}
-            iconBg="rgba(93,202,165,0.15)"
-            iconColor="#9fe1cb"
-          />
-        </div>
 
-        <InventoryTable />
+return (
+  <>
+  {/* HERO */}
 
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-4 mt-4">
-          <SalesChart />
-          <CategoryChart />
-        </div>
-      </section>
-    </main>
-  );
+<div
+  className="
+    mb-5
+    rounded-3xl
+    border
+    border-white/5
+    bg-gradient-to-br
+    from-[#1b2b1b]
+    via-[#162616]
+    to-[#0f1a0f]
+    p-6
+
+    flex
+    items-center
+    justify-between
+  "
+>
+
+  <div>
+
+    <p className="text-sm text-white/40">
+      Panel de administración
+    </p>
+
+    <h1
+      className="
+        mt-2
+        text-4xl
+        font-bold
+        text-white
+      "
+    >
+      Bienvenido,
+      <span className="text-[#82c982]">
+        {" "}
+        {user.name}
+      </span>
+    </h1>
+
+    <p className="mt-3 text-white/50">
+      Consulta el estado del inventario y administra los
+      productos del vivero.
+    </p>
+
+  </div>
+
+<div
+className="
+  object-contain
+  transition-all
+  duration-300
+  hover:scale-105
+  drop-shadow-[0_0_20px_rgba(109,181,109,0.35)]
+"
+>
+  <Image
+    src="/images/logo.png"
+    alt="Logo Vivero HJ"
+    width={80}
+    height={80}
+    className="
+      object-contain
+      drop-shadow-lg
+    "
+    priority
+  />
+</div>
+
+</div>
+    {/* TARJETAS KPI */}
+
+    <div
+      className="
+        grid
+        grid-cols-1
+        xs:grid-cols-2
+        md:grid-cols-2
+        xl:grid-cols-4
+        gap-4
+        mt-0
+        mb-5
+      "
+    >
+    </div>
+
+    {/* TABLA */}
+
+<div
+  className="
+    rounded-3xl
+
+    border
+    border-white/5
+
+    bg-[#131f13]
+
+    p-5
+
+    shadow-xl
+
+    mb-8
+  "
+>
+      <InventoryTable />
+    </div>
+
+    {/* GRAFICAS */}
+
+    <div
+      className="
+        grid
+        grid-cols-1
+        lg:grid-cols-[1fr_300px]
+        gap-5
+        mt-5
+        w-full
+      "
+    >
+      <div
+  className="
+    min-w-0
+
+    rounded-3xl
+
+    border
+    border-white/5
+
+    bg-[#131f13]
+
+    p-5
+  "
+>
+        <SalesChart periodo="semana" />
+      </div>
+
+      <div
+  className="
+    min-w-0
+
+    rounded-3xl
+
+    border
+    border-white/5
+
+    bg-[#131f13]
+
+    p-5
+  "
+>
+        <CategoryChart />
+      </div>
+    </div>
+  </>
+);
+
 }

@@ -1,173 +1,225 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import InventoryTable from "@/components/Tables/InventoryTable";
+import InventoryStats from "@/components/Inventario/InventoryStats";
+
+import EntradaModal from "@/components/Modals/EntradaModal";
+import SalidaModal from "@/components/Modals/SalidaModal";
+import ProductModal from "@/components/Modals/ProductModal";
+
+import { obtenerProductos, type Producto } from "@/lib/inventario";
+
+
 
 export default function InventarioPage() {
+
+  const [productos, setProductos] =
+    useState<Producto[]>([]);
+
+
+  const [openEntrada, setOpenEntrada] =
+    useState(false);
+
+
+  const [openSalida, setOpenSalida] =
+    useState(false);
+
+  const [openProducto, setOpenProducto] = useState(false);
+
+
+
+  async function cargarProductos(){
+
+
+    const {
+      data,
+      error
+    } = await obtenerProductos();
+
+
+
+    if(error){
+
+      console.error(
+        "Error cargando productos:",
+        error
+      );
+
+      return;
+
+    }
+
+
+
+    setProductos(
+      (data ?? []) as Producto[]
+    );
+
+  }
+
+
+
+
+  useEffect(()=>{
+
+    cargarProductos();
+
+  },[]);
+
+
+
+
+
   return (
-    <div
-      className="
-        min-h-screen
-        p-6
-        space-y-5
-        rounded-2xl
-        bg-[#0f1a0f]
-      "
-    >
+
+    <div className="rounded-2xl bg-[#0f1a0f] p-6 space-y-5">
+
+
       {/* HEADER */}
-      <div className="pb-5 border-b border-[#274127]">
+
+      <div className="border-b border-[#274127] pb-5">
+
         <h1 className="text-3xl font-bold text-white">
           Inventario
         </h1>
 
         <p className="mt-2 text-white/50">
-          Gestión de productos en tiempo real
+          Control de existencias y movimientos
         </p>
+
       </div>
 
-      {/* BUSCADOR + FILTROS */}
-      <div className="flex flex-col xl:flex-row gap-4">
 
-        <input
-          placeholder="Buscar producto..."
-          className="
-            flex-1
-            px-5
-            py-3
-            rounded-xl
-            bg-[#162616]
-            border
-            border-[#274127]
-            text-white
-            placeholder:text-white/35
-            outline-none
-            transition
-            focus:border-[#6db56d]
-            focus:ring-2
-            focus:ring-[#6db56d]/20
-          "
-        />
 
-        <div className="flex gap-2 flex-wrap">
 
-          <button
-            className="
-              px-4 py-2
-              rounded-xl
-              bg-[#203520]
-              border border-[#6db56d]
-              text-white
-              text-sm
-              font-medium
-            "
-          >
-            Todos
-          </button>
+      {/* STATS */}
 
-          <button
-            className="
-              px-4 py-2
-              rounded-xl
-              bg-[#162616]
-              border border-[#274127]
-              text-white/80
-              text-sm
-              hover:bg-[#203520]
-              hover:border-[#6db56d]
-              transition
-            "
-          >
-            Plantas
-          </button>
+      <InventoryStats
+        productos={productos}
+      />
 
-          <button
-            className="
-              px-4 py-2
-              rounded-xl
-              bg-[#162616]
-              border border-[#274127]
-              text-white/80
-              text-sm
-              hover:bg-[#203520]
-              hover:border-[#6db56d]
-              transition
-            "
-          >
-            Flores
-          </button>
 
-          <button
-            className="
-              px-4 py-2
-              rounded-xl
-              bg-[#162616]
-              border border-[#274127]
-              text-white/80
-              text-sm
-              hover:bg-[#203520]
-              hover:border-[#6db56d]
-              transition
-            "
-          >
-            Macetas
-          </button>
 
-        </div>
-      </div>
+
+
+
 
       {/* ACCIONES */}
+
       <div className="flex flex-wrap gap-3">
 
-        <button
-          className="
-            px-4 py-2
-            rounded-xl
-            bg-[#162616]
-            border border-[#274127]
-            text-white
-            text-sm
-            hover:bg-[#203520]
-            hover:border-[#6db56d]
-            transition
-          "
-        >
-          + Entrada
-        </button>
 
         <button
+          onClick={()=>setOpenProducto(true)}
           className="
-            px-4 py-2
             rounded-xl
-            bg-[#162616]
-            border border-[#274127]
-            text-white
+            bg-[#6db56d]
+            px-5
+            py-2
             text-sm
-            hover:bg-[#203520]
-            hover:border-red-400
-            transition
+            font-medium
+            text-black
           "
         >
-          - Salida
+          + Nuevo producto
         </button>
 
+
+
         <button
+          onClick={()=>setOpenEntrada(true)}
           className="
-            px-4 py-2
             rounded-xl
+            border
+            border-[#274127]
             bg-[#162616]
-            border border-[#274127]
-            text-white
+            px-4
+            py-2
             text-sm
-            hover:bg-[#203520]
-            hover:border-[#6db56d]
-            transition
+            text-white
           "
         >
-          Exportar
+          ↓ Entrada
         </button>
+
+
+
+
+        <button
+          onClick={()=>setOpenSalida(true)}
+          className="
+            rounded-xl
+            border
+            border-[#274127]
+            bg-[#162616]
+            px-4
+            py-2
+            text-sm
+            text-white
+          "
+        >
+          ↑ Salida
+        </button>
+
 
       </div>
 
+
+
+
+
       {/* TABLA */}
-      <InventoryTable />
+
+<InventoryTable
+  productos={productos}
+  onRefresh={cargarProductos}
+/>
+
+
+
+
+
+
+      {/* MODALES */}
+
+      <EntradaModal
+        open={openEntrada}
+        onClose={()=>setOpenEntrada(false)}
+        onSaved={()=>{
+
+          setOpenEntrada(false);
+          cargarProductos();
+
+        }}
+      />
+
+
+
+      <SalidaModal
+        open={openSalida}
+        onClose={()=>setOpenSalida(false)}
+        onSaved={()=>{
+
+          setOpenSalida(false);
+          cargarProductos();
+
+        }}
+      />
+
+<ProductModal
+  open={openProducto}
+  onClose={() => setOpenProducto(false)}
+  onSaved={() => {
+    setOpenProducto(false);
+    cargarProductos();
+  }}
+  producto={null}
+/>
 
     </div>
+
   );
+
 }

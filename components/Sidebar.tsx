@@ -1,16 +1,21 @@
+"use client";
+
 import {
-  LayoutGrid,
-  Flower2,
-  Sprout,
+  LayoutDashboard,
   Package,
   Truck,
   AlertTriangle,
   Settings,
+  ClipboardList,
+  BarChart3,
+  LogOut
 } from "lucide-react";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+
 
 type SidebarProps = {
   open?: boolean;
@@ -23,242 +28,479 @@ export default function Sidebar({
   onClose,
 }: SidebarProps) {
 
-  const [category, setCategory] = useState("todas");
+
+  const [expanded, setExpanded] = useState(false);
+
+  const timer = useRef<NodeJS.Timeout | null>(null);
+
+
+
+  const openSidebar = () => {
+
+    if (timer.current) {
+      clearTimeout(timer.current);
+    }
+
+    setExpanded(true);
+
+  };
+
+
+
+  const closeSidebar = () => {
+
+    timer.current = setTimeout(() => {
+      setExpanded(false);
+    },120);
+
+  };
+
+
 
   return (
     <>
-  {/* Overlay móvil */}
-  {open && (
-    <div
-      onClick={onClose}
-      className="
-        lg:hidden
-        fixed inset-0
-        bg-black/50
-        z-40
-      "
-    />
-  )}
 
-  <aside
-    className={`
-      fixed lg:static
-      top-0 left-0
-      h-screen lg:h-auto
-      w-[220px]
-      min-w-[220px]
-      bg-[#0f1a0f]
-      border-r border-white/5
-      p-3
-      flex flex-col
-      z-50
-      transition-transform duration-300
 
-      ${
-        open
-          ? "translate-x-0"
-          : "-translate-x-full lg:translate-x-0"
-      }
-    `}
-  >
+      {/* OVERLAY MOBILE */}
 
-      {/* LOGO */}
-      <div className="lg:hidden flex justify-end mb-2">
-        <button
+      {open && (
+
+        <div
           onClick={onClose}
           className="
-            text-white/50
-            hover:text-white
-            text-xl
+            lg:hidden
+            fixed
+            inset-0
+            bg-black/50
+            z-40
+          "
+        />
+
+      )}
+
+
+
+      <aside
+
+        onMouseEnter={openSidebar}
+        onMouseLeave={closeSidebar}
+
+        className={`
+
+          fixed
+          lg:static
+
+          top-0
+          left-0
+
+          h-dvh
+
+          ${
+            expanded
+              ? "lg:w-[220px]"
+              : "lg:w-[70px]"
+          }
+
+
+          w-[85vw]
+          max-w-[220px]
+
+
+          bg-[#0f1a0f]
+
+          border-r
+          border-white/5
+
+
+          p-3
+
+          flex
+          flex-col
+
+
+          overflow-hidden
+
+          z-50
+
+
+          transition-[width]
+          duration-200
+          ease-out
+
+
+
+          ${
+            open
+              ? "translate-x-0"
+              : "-translate-x-full lg:translate-x-0"
+          }
+
+        `}
+
+      >
+
+
+
+        {/* CERRAR MOBILE */}
+
+        <div
+          className="
+            lg:hidden
+            flex
+            justify-end
+            mb-2
           "
         >
-          ✕
-        </button>
-      </div>
-      <div className="flex items-center gap-2 px-3 py-4 mb-4">
-        <div className="w-2 h-2 rounded-full bg-[#6db56d]" />
 
-        <h1 className="text-[#e8f4e8] font-medium tracking-wide">
-          Vivero HJ
-        </h1>
-      </div>
+          <button
+            onClick={onClose}
+            className="
+              text-white/40
+              hover:text-white
+              transition-colors
+              duration-150
+            "
+          >
+            ✕
+          </button>
 
-      {/* CATEGORIAS */}
-      <div className="text-[10px] uppercase tracking-widest text-white/25 px-3 mb-2">
-        Categorías
-      </div>
+        </div>
 
-      <div className="space-y-1">
 
-<SidebarItem
-  icon={<LayoutGrid size={15} />}
-  label="Todas"
-  active={category === "todas"}
-  onClick={() => setCategory("todas")}
-/>
 
-<SidebarItem
-  icon={<Sprout size={15} />}
-  label="Plantas"
-  active={category === "plantas"}
-  onClick={() => setCategory("plantas")}
-/>
 
-<SidebarItem
-  icon={<Flower2 size={15} />}
-  label="Flores"
-  active={category === "flores"}
-  onClick={() => setCategory("flores")}
-/>
 
-<SidebarItem
-  icon={<Package size={15} />}
-  label="Macetas"
-  active={category === "macetas"}
-  onClick={() => setCategory("macetas")}
-/>
+        {/* LOGO */}
 
-      </div>
+        <div
+          className="
+            flex
+            items-center
+            gap-2
+            px-3
+            py-4
+            mb-4
+          "
+        >
 
-      {/* ACCIONES */}
-      <div className="text-[10px] uppercase tracking-widest text-white/25 px-3 mt-6 mb-2">
-        Acciones
-      </div>
+          <div
+            className="
+              w-2
+              h-2
+              rounded-full
+              bg-[#6db56d]
+              shrink-0
+            "
+          />
 
-      <div className="space-y-1">
 
-        <SidebarItem
-          icon={<Truck size={15} />}
-          label="Proveedores"
-        />
+          <h1
+            className={`
 
-        <SidebarItem
-          icon={<AlertTriangle size={15} />}
-          label="Alertas"
-          badge="4"
-        />
+              text-[#e8f4e8]
 
-        <SidebarItem
-          icon={<Settings size={15} />}
-          label="Configuración"
-        />
+              font-medium
 
-      </div>
+              tracking-wide
 
-      {/* STOCK */}
-      <div className="mt-auto bg-white/[0.03] border border-white/5 rounded-xl p-4">
+              whitespace-nowrap
 
-        <p className="text-[11px] text-white/30 mb-4">
-          Stock por categoría
-        </p>
+              overflow-hidden
 
-        <StockItem
-          name="Plantas"
-          value="78%"
-          width="78%"
-          color="#6db56d"
-        />
 
-        <StockItem
-          name="Flores"
-          value="45%"
-          width="45%"
-          color="#ef9f27"
-        />
+              transition-[opacity,width]
+              duration-150
 
-        <StockItem
-          name="Macetas"
-          value="12%"
-          width="12%"
-          color="#e24b4a"
-        />
 
-      </div>
+              ${
+                expanded
+                  ? "opacity-100 w-auto"
+                  : "opacity-0 w-0"
+              }
 
-    </aside>
-</>
+            `}
+          >
+
+            Vivero HJ
+
+          </h1>
+
+
+        </div>
+
+
+
+
+
+
+        {/* MENU */}
+
+        <div>
+
+
+          {expanded && (
+
+            <div
+              className="
+                text-[10px]
+                uppercase
+                tracking-widest
+                text-white/25
+                px-3
+                mb-2
+              "
+            >
+              Menú
+            </div>
+
+          )}
+
+
+
+
+          <div className="space-y-1">
+
+
+            <SidebarItem
+              expanded={expanded}
+              icon={<LayoutDashboard size={18}/>}
+              label="Resumen"
+              href="/dashboard"
+              onClick={onClose}
+            />
+
+
+            <SidebarItem
+              expanded={expanded}
+              icon={<Package size={18}/>}
+              label="Inventario"
+              href="/inventario"
+              onClick={onClose}
+            />
+
+
+            <SidebarItem
+              expanded={expanded}
+              icon={<ClipboardList size={18}/>}
+              label="Movimientos"
+              href="/movimientos"
+              onClick={onClose}
+            />
+
+
+
+            <SidebarItem
+              expanded={expanded}
+              icon={<Truck size={18}/>}
+              label="Pedidos"
+              href="/pedidos"
+              onClick={onClose}
+            />
+
+
+
+            <SidebarItem
+              expanded={expanded}
+              icon={<AlertTriangle size={18}/>}
+              label="Rehabilitación"
+              href="/rehabilitacion-admin"
+              onClick={onClose}
+            />
+
+
+
+            <SidebarItem
+              expanded={expanded}
+              icon={<BarChart3 size={18}/>}
+              label="Reportes"
+              href="/reportes"
+              onClick={onClose}
+            />
+
+
+          </div>
+
+
+
+
+
+          <div className="mt-4 space-y-1">
+
+
+            <SidebarItem
+              expanded={expanded}
+              icon={<Settings size={18}/>}
+              label="Configuración"
+              href="/configuracion"
+              onClick={onClose}
+            />
+
+
+          </div>
+
+
+
+        </div>
+                {/* CERRAR SESIÓN */}
+
+
+      </aside>
+
+
+    </>
   );
+
 }
 
+
+
+
+
+
+
 function SidebarItem({
+
   icon,
   label,
   href,
-  badge,
-}: {
-  icon: ReactNode;
-  label: string;
-  href?: string;
-  badge?: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
+  expanded,
+  onClick,
+
+}:{
+
+  icon:ReactNode;
+
+  label:string;
+
+  href?:string;
+
+  expanded:boolean;
+
+  onClick?:()=>void;
+
+}){
+
+
   const pathname = usePathname();
 
-  const active = href ? pathname === href : false;
+
+  const isActive =
+    href &&
+    (
+      pathname === href ||
+      pathname.startsWith(`${href}/`)
+    );
+
+
 
   const content = (
+
     <div
+
+      onClick={onClick}
+
       className={`
-        flex items-center justify-between
-        px-3 py-2 rounded-lg transition
-        cursor-pointer
+
+        flex
+
+        items-center
+
+
         ${
-          active
-            ? "bg-[#6db56d]/10 text-[#a8d5a8]"
-            : "text-white/45 hover:bg-white/5"
+          expanded
+            ? "gap-2 justify-start"
+            : "justify-center"
         }
+
+
+        px-3
+
+        py-2
+
+
+        rounded-lg
+
+
+        transition-colors
+
+        duration-150
+
+
+        cursor-pointer
+
+
+        text-[13px]
+
+
+
+        ${
+          isActive
+
+          ? "bg-[#6db56d]/10 text-[#a8d5a8]"
+
+          : "text-white/45 hover:bg-white/5 hover:text-white"
+
+        }
+
+
       `}
+
     >
-      <div className="flex items-center gap-2 text-[13px]">
-        {icon}
+
+
+      {icon}
+
+
+
+      <span
+
+        className={`
+
+          whitespace-nowrap
+
+          overflow-hidden
+
+
+          transition-[opacity,width]
+
+          duration-150
+
+
+
+          ${
+            expanded
+              ? "opacity-100 w-auto"
+              : "opacity-0 w-0"
+          }
+
+        `}
+
+      >
+
         {label}
-      </div>
 
-      {badge && (
-        <span className="text-[10px] bg-red-500/20 text-red-300 px-2 rounded-full">
-          {badge}
-        </span>
-      )}
+      </span>
+
+
     </div>
+
   );
 
-  if (!href) return content;
 
-  return <Link href={href}>{content}</Link>;
-}
 
-function StockItem({
-  name,
-  value,
-  width,
-  color,
-}: {
-  name: string;
-  value: string;
-  width: string;
-  color: string;
-}) {
+  if(!href) return content;
+
+
+
   return (
-    <div className="mb-3">
 
-      <div className="flex justify-between text-[10px] text-white/40 mb-1">
-        <span>{name}</span>
-        <span>{value}</span>
-      </div>
+    <Link
+      href={href}
+    >
+      {content}
+    </Link>
 
-      <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-
-        <div
-          className="h-full rounded-full"
-          style={{
-            width,
-            background: color,
-          }}
-        />
-
-      </div>
-
-    </div>
   );
+
+
 }
