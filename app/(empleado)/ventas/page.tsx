@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { obtenerProductos, Producto } from "@/lib/inventario";
 
-import ProductCard from "../ProductCard";
-import CartItem from "../CartItem";
-import SaleModal from "../SaleModal";
+import ProductCard from "../_components/ProductCard";
+import CartItem from "../_components/CartItem";
+import SaleModal from "../_components/SaleModal";
 import ProductQuickModal from "@/components/ProductQuickModal";
-import { useCart } from "../CartContext";
+import { useCart } from "../_components/CartContext";
 import { useSearch } from "@/context/SearchContext";
 import { finalizarVenta } from "@/lib/ventas";
 import { supabase } from "@/lib/supabase";

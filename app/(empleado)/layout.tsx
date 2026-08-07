@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import SidebarEmpleado from "./SidebarEmpleado";
+import SidebarEmpleado from "./_components/SidebarEmpleado";
 import Navbar from "@/components/Navbar";
-import { CartProvider } from "./CartContext";
+import { CartProvider } from "./_components/CartContext";
 import { SearchProvider } from "@/context/SearchContext";
 
 

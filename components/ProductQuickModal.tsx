@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, ShoppingCart, Minus, Plus } from "lucide-react";
-import { useCart } from "@/app/(empleado)/CartContext";
+import { useCart } from "@/app/(empleado)/_components/CartContext";
 import type { Producto } from "@/lib/inventario";
 
 
