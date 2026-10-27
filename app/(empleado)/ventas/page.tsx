@@ -1,172 +1,357 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { obtenerProductos, Producto } from "@/lib/inventario";
+import {
+  obtenerProductos,
+  Producto,
+} from "@/lib/inventario";
 
 import ProductCard from "../_components/ProductCard";
 import CartItem from "../_components/CartItem";
 import SaleModal from "../_components/SaleModal";
 import ProductQuickModal from "@/components/ProductQuickModal";
+import TicketVenta, {
+  type TicketData,
+} from "@/components/TicketVenta";
+
 import { useCart } from "../_components/CartContext";
 import { useSearch } from "@/context/SearchContext";
 import { finalizarVenta } from "@/lib/ventas";
 import { supabase } from "@/lib/supabase";
 
 
-
 export default function VentasPage() {
 
-  const { carrito, vaciarCarrito } = useCart();
-
-  const { busqueda } = useSearch();
-
-  const [productos, setProductos] = useState<Producto[]>([]);
-const [cargando, setCargando] = useState(true);
+  const {
+    carrito,
+    vaciarCarrito,
+  } = useCart();
 
 
-  const [categoriaSeleccionada, setCategoriaSeleccionada] =
-    useState("Todas");
+  const {
+    busqueda
+  } = useSearch();
 
 
-const [modalAbierto, setModalAbierto] =
-  useState(false);
+  const [
+    productos,
+    setProductos
+  ] = useState<Producto[]>([]);
 
 
-const [productoSeleccionado, setProductoSeleccionado] =
-  useState<Producto | null>(null);
+  const [
+    cargando,
+    setCargando
+  ] = useState(true);
 
 
-const [cajero, setCajero] = useState("Cargando...");
-  const [numeroVenta, setNumeroVenta] = useState("000001");
+  const [
+    categoriaSeleccionada,
+    setCategoriaSeleccionada
+  ] = useState("Todas");
 
+
+  const [
+    modalAbierto,
+    setModalAbierto
+  ] = useState(false);
+
+
+  const [
+    productoSeleccionado,
+    setProductoSeleccionado
+  ] = useState<Producto | null>(null);
+
+
+  const [
+    cajero,
+    setCajero
+  ] = useState("Cargando...");
+
+
+  const [
+    numeroVenta,
+    setNumeroVenta
+  ] = useState("000001");
+
+
+  // =====================================
+  // TICKET
+  // =====================================
+
+  const [
+    ticket,
+    setTicket
+  ] = useState<TicketData | null>(null);
+
+
+  // =====================================
+  // CARGA INICIAL
+  // =====================================
 
   useEffect(() => {
-  cargarProductos();
-  cargarCajero();
-  cargarNumeroVenta();
 
-}, []);
+    cargarProductos();
+    cargarCajero();
+    cargarNumeroVenta();
 
-async function cargarProductos() {
-  setCargando(true);
+  }, []);
 
-  const { data, error } = await obtenerProductos();
 
-  if (error) {
-    console.error("Error al cargar productos:", error);
-  } else {
-    setProductos(data ?? []);
+  // =====================================
+  // PRODUCTOS
+  // =====================================
+
+  async function cargarProductos() {
+
+    setCargando(true);
+
+
+    const {
+      data,
+      error
+    } = await obtenerProductos();
+
+
+    if (error) {
+
+      console.error(
+        "Error al cargar productos:",
+        error
+      );
+
+    } else {
+
+      setProductos(
+        data ?? []
+      );
+
+    }
+
+
+    setCargando(false);
+
   }
 
-  setCargando(false);
-}
 
-async function cargarCajero() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // =====================================
+  // CAJERO
+  // =====================================
 
-  if (!user) return;
+  async function cargarCajero() {
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("nombre")
-    .eq("auth_user_id", user.id)
-    .single();
+    const {
+      data: {
+        user
+      },
+    } = await supabase.auth.getUser();
 
-  setCajero(
-    usuario?.nombre ??
-    user.user_metadata?.name ??
-    user.email?.split("@")[0] ??
-    "Usuario"
-  );
-}
 
-async function cargarNumeroVenta() {
-  const { data } = await supabase
-    .from("ventas")
-    .select("folio")
-    .order("folio", { ascending: false })
-    .limit(1)
-    .single();
+    if (!user) return;
 
-  const siguiente = (data?.folio ?? 0) + 1;
 
-  setNumeroVenta(String(siguiente).padStart(6, "0"));
-}
+    const {
+      data: usuario
+    } = await supabase
 
-const categorias = [
-  "Todas",
-  ...Array.from(
-    new Set(
-      productos
-        .map((producto)=>producto.tipo)
-        .filter(Boolean)
+      .from("usuarios")
+
+      .select("nombre")
+
+      .eq(
+        "auth_user_id",
+        user.id
+      )
+
+      .single();
+
+
+    setCajero(
+
+      usuario?.nombre ??
+
+      user.user_metadata?.name ??
+
+      user.email?.split("@")[0] ??
+
+      "Usuario"
+
+    );
+
+  }
+
+
+  // =====================================
+  // NÚMERO DE VENTA
+  // =====================================
+
+  async function cargarNumeroVenta() {
+
+    const {
+      data
+    } = await supabase
+
+      .from("ventas")
+
+      .select("folio")
+
+      .order(
+        "folio",
+        {
+          ascending: false
+        }
+      )
+
+      .limit(1)
+
+      .single();
+
+
+    const siguiente =
+      (data?.folio ?? 0) + 1;
+
+
+    setNumeroVenta(
+      String(siguiente)
+        .padStart(6, "0")
+    );
+
+  }
+
+
+  // =====================================
+  // CATEGORÍAS
+  // =====================================
+
+  const categorias = [
+
+    "Todas",
+
+    ...Array.from(
+
+      new Set(
+
+        productos
+
+          .map(
+            (producto) =>
+              producto.tipo
+          )
+
+          .filter(Boolean)
+
+      )
+
     )
-  )
-];
+
+  ];
 
 
+  // =====================================
+  // FILTRAR PRODUCTOS
+  // =====================================
 
-const productosFiltrados = productos.filter((producto)=>{
-
-
-  const coincideBusqueda =
-    producto.nombre
-      .toLowerCase()
-      .includes(busqueda.toLowerCase());
-
+  const productosFiltrados =
+    productos.filter(
+      (producto) => {
 
 
-  const coincideCategoria =
-    categoriaSeleccionada === "Todas"
-    ||
-    producto.tipo === categoriaSeleccionada;
+        const coincideBusqueda =
+
+          producto.nombre
+
+            .toLowerCase()
+
+            .includes(
+              busqueda.toLowerCase()
+            );
 
 
+        const coincideCategoria =
+
+          categoriaSeleccionada ===
+          "Todas"
+
+          ||
+
+          producto.tipo ===
+          categoriaSeleccionada;
+
+
+        return (
+
+          coincideBusqueda &&
+
+          coincideCategoria
+
+        );
+
+      }
+    );
+
+
+  // =====================================
+  // SUBTOTAL
+  // =====================================
+
+  const subtotal =
+    carrito.reduce(
+
+      (total, producto) =>
+
+        total +
+        producto.precio *
+        producto.cantidad,
+
+      0
+
+    );
+
+
+  // =====================================
+  // TOTAL ARTÍCULOS
+  // =====================================
+
+  const totalArticulos =
+    carrito.reduce(
+
+      (total, producto) =>
+
+        total +
+        producto.cantidad,
+
+      0
+
+    );
+
+
+  // =====================================
+  // RENDER
+  // =====================================
 
   return (
-    coincideBusqueda &&
-    coincideCategoria
-  );
 
-
-});
-
-
-
-  const subtotal = carrito.reduce(
-    (total, producto) =>
-      total + producto.precio * producto.cantidad,
-    0
-  );
-
-
-  const totalArticulos = carrito.reduce(
-    (total, producto) =>
-      total + producto.cantidad,
-    0
-  );
-
-
-
-  return (
     <>
 
-    <div
-      className="
-        grid
-        grid-cols-1
-        lg:grid-cols-12
-        gap-5
-      "
-    >
+      <div
+        className="
+          grid
+          grid-cols-1
+          lg:grid-cols-12
+          gap-5
+        "
+      >
 
 
-
+        {/* ================================= */}
         {/* PRODUCTOS */}
+        {/* ================================= */}
 
-        <section className="lg:col-span-9">
+        <section
+          className="
+            lg:col-span-9
+          "
+        >
 
 
           <div
@@ -181,17 +366,17 @@ const productosFiltrados = productos.filter((producto)=>{
           >
 
 
-          <div
-            className="
-              flex
-              flex-col
-              sm:flex-row
-              justify-between
-              items-start
-              sm:items-center
-              gap-4
-            "
-          >
+            <div
+              className="
+                flex
+                flex-col
+                sm:flex-row
+                justify-between
+                items-start
+                sm:items-center
+                gap-4
+              "
+            >
 
               <div>
 
@@ -214,15 +399,18 @@ const productosFiltrados = productos.filter((producto)=>{
                     mt-1
                   "
                 >
-                  Selecciona productos para agregarlos al carrito.
+                  Selecciona productos para
+                  agregarlos al carrito.
                 </p>
-
 
               </div>
 
 
-
-              <div className="text-right">
+              <div
+                className="
+                  text-right
+                "
+              >
 
                 <p
                   className="
@@ -245,14 +433,9 @@ const productosFiltrados = productos.filter((producto)=>{
                   {numeroVenta}
                 </p>
 
-
               </div>
 
-
             </div>
-
-
-
 
 
             <div
@@ -280,20 +463,22 @@ const productosFiltrados = productos.filter((producto)=>{
 
               <InfoCard
                 title="Fecha"
-                value={new Date().toLocaleDateString()}
+                value={
+                  new Date()
+                    .toLocaleDateString()
+                }
               />
 
 
               <InfoCard
                 title="Total actual"
-                value={`$${subtotal.toFixed(2)}`}
+                value={
+                  `$${subtotal.toFixed(2)}`
+                }
                 highlight
               />
 
-
             </div>
-
-
 
 
             <div
@@ -305,41 +490,47 @@ const productosFiltrados = productos.filter((producto)=>{
               "
             >
 
-              {categorias.map((categoria) => (
+              {categorias.map(
+                (categoria) => (
 
-                <button
-                  key={categoria}
+                  <button
+                    key={categoria}
                     onClick={() =>
-                      setCategoriaSeleccionada(categoria ?? "")
+                      setCategoriaSeleccionada(
+                        categoria ?? ""
+                      )
                     }
-                  className={`
-                    px-4
-                    py-2
-                    rounded-lg
-                    text-sm
-                    transition
+                    className={`
+                      px-4
+                      py-2
+                      rounded-lg
+                      text-sm
+                      transition
 
-                    ${
-                      categoriaSeleccionada === categoria
-                        ? "bg-[#6db56d]/20 text-[#a8d5a8]"
-                        : "bg-white/5 text-white/40 hover:bg-white/10"
-                    }
-                  `}
-                >
-                  {categoria}
-                </button>
+                      ${
+                        categoriaSeleccionada ===
+                        categoria
 
-              ))}
+                          ? "bg-[#6db56d]/20 text-[#a8d5a8]"
 
+                          : "bg-white/5 text-white/40 hover:bg-white/10"
+                      }
+                    `}
+                  >
+                    {categoria}
+                  </button>
+
+                )
+              )}
 
             </div>
-
 
           </div>
 
 
-
-
+          {/* ================================= */}
+          {/* GRID PRODUCTOS */}
+          {/* ================================= */}
 
           <div
             className="
@@ -352,26 +543,48 @@ const productosFiltrados = productos.filter((producto)=>{
             "
           >
 
-
             {productosFiltrados.length > 0 ? (
 
-              productosFiltrados.map((producto) => (
+              productosFiltrados.map(
+                (producto) => (
 
-<ProductCard
-  key={producto.id}
-  id={producto.id}
-  nombre={producto.nombre}
-  precio={producto.precio_venta}
-  stock={producto.stock}
-  imagen={producto.imagen}
-  categoria={producto.tipo ?? undefined}
+                  <ProductCard
+                    key={producto.id}
 
-  onOpen={()=>{
-    setProductoSeleccionado(producto);
-  }}
-/>
+                    id={producto.id}
 
-              ))
+                    nombre={producto.nombre}
+
+                    precio={
+                      producto.precio_venta
+                    }
+
+                    stock={
+                      producto.stock
+                    }
+
+                    imagen={
+                      producto.imagen
+                    }
+
+                    categoria={
+                      producto.tipo ??
+                      undefined
+                    }
+
+                    onOpen={() => {
+
+                      setProductoSeleccionado(
+                        producto
+                      );
+
+                    }}
+
+                  />
+
+                )
+
+              )
 
             ) : (
 
@@ -394,44 +607,44 @@ const productosFiltrados = productos.filter((producto)=>{
                 </h2>
 
 
-                <p className="text-white/30 mt-2">
-                  Intenta con otro nombre o categoría.
+                <p
+                  className="
+                    text-white/30
+                    mt-2
+                  "
+                >
+                  Intenta con otro nombre
+                  o categoría.
                 </p>
-
 
               </div>
 
             )}
 
-
           </div>
-
 
         </section>
 
 
-
-
-
-
-
+        {/* ================================= */}
         {/* CARRITO */}
+        {/* ================================= */}
 
-<aside
-  className="
-    lg:col-span-3
-    bg-white/[0.03]
-    border
-    border-white/5
-    rounded-xl
-    p-5
-    lg:sticky
-    lg:top-5
-    h-[calc(100vh-40px)]
-    flex
-    flex-col
-  "
->
+        <aside
+          className="
+            lg:col-span-3
+            bg-white/[0.03]
+            border
+            border-white/5
+            rounded-xl
+            p-5
+            lg:sticky
+            lg:top-5
+            h-[calc(100vh-40px)]
+            flex
+            flex-col
+          "
+        >
 
 
           <div
@@ -447,19 +660,35 @@ const productosFiltrados = productos.filter((producto)=>{
 
             <div>
 
-              <h2 className="text-lg font-semibold text-white">
+              <h2
+                className="
+                  text-lg
+                  font-semibold
+                  text-white
+                "
+              >
                 Carrito
               </h2>
 
 
-              <p className="text-xs text-white/40 mt-1">
-                {totalArticulos} artículo
-                {totalArticulos !== 1 ? "s" : ""}
+              <p
+                className="
+                  text-xs
+                  text-white/40
+                  mt-1
+                "
+              >
+
+                {totalArticulos}
+                {" "}
+                artículo
+                {totalArticulos !== 1
+                  ? "s"
+                  : ""}
+
               </p>
 
-
             </div>
-
 
 
             {carrito.length > 0 && (
@@ -477,12 +706,12 @@ const productosFiltrados = productos.filter((producto)=>{
 
             )}
 
-
           </div>
 
 
-
-
+          {/* ================================= */}
+          {/* CONTENIDO CARRITO */}
+          {/* ================================= */}
 
           {carrito.length === 0 ? (
 
@@ -493,67 +722,90 @@ const productosFiltrados = productos.filter((producto)=>{
               "
             >
 
-              <div className="text-5xl">
+              <div
+                className="
+                  text-5xl
+                "
+              >
                 🛒
               </div>
 
-              <p className="text-white mt-3">
+
+              <p
+                className="
+                  text-white
+                  mt-3
+                "
+              >
                 Carrito vacío
               </p>
 
-              <p className="text-xs text-white/30 mt-1">
+
+              <p
+                className="
+                  text-xs
+                  text-white/30
+                  mt-1
+                "
+              >
                 Agrega productos para comenzar.
               </p>
 
-
             </div>
-
 
           ) : (
 
-<div
-  className="
-    space-y-3
-    py-4
-    max-h-[55vh]
-    overflow-y-auto
-    pr-2
-  "
->
+            <div
+              className="
+                space-y-3
+                py-4
+                max-h-[55vh]
+                overflow-y-auto
+                pr-2
+              "
+            >
 
-              {carrito.map((producto) => (
+              {carrito.map(
+                (producto) => (
 
-                <CartItem
-                  key={producto.id}
-                  producto={producto}
-                />
+                  <CartItem
+                    key={producto.id}
+                    producto={producto}
+                  />
 
-              ))}
-
+                )
+              )}
 
             </div>
 
           )}
 
 
+          {/* ================================= */}
+          {/* RESUMEN CARRITO */}
+          {/* ================================= */}
 
+          <div
+            className="
+              border-t
+              border-white/5
+              pt-4
+              pb-1
+              sticky
+              bottom-0
+              bg-[#162716]
+              mt-auto
+            "
+          >
 
-
-
-<div
-  className="
-    border-t
-    border-white/5
-    pt-4
-    pb-1
-    sticky
-    bottom-0
-  bg-[#162716]
-    mt-auto
-  "
->
-
-            <div className="flex justify-between text-sm text-white/40">
+            <div
+              className="
+                flex
+                justify-between
+                text-sm
+                text-white/40
+              "
+            >
 
               <span>
                 Artículos
@@ -566,8 +818,15 @@ const productosFiltrados = productos.filter((producto)=>{
             </div>
 
 
-
-            <div className="flex justify-between text-sm text-white/40 mt-2">
+            <div
+              className="
+                flex
+                justify-between
+                text-sm
+                text-white/40
+                mt-2
+              "
+            >
 
               <span>
                 Subtotal
@@ -580,7 +839,6 @@ const productosFiltrados = productos.filter((producto)=>{
             </div>
 
 
-
             <div
               className="
                 flex
@@ -589,25 +847,38 @@ const productosFiltrados = productos.filter((producto)=>{
               "
             >
 
-              <span className="text-white font-medium">
+              <span
+                className="
+                  text-white
+                  font-medium
+                "
+              >
                 Total
               </span>
 
 
-              <span className="text-lg font-bold font-semibold text-[#a8d5a8]">
+              <span
+                className="
+                  text-lg
+                  font-bold
+                  text-[#a8d5a8]
+                "
+              >
                 ${subtotal.toFixed(2)}
               </span>
-
 
             </div>
 
 
-
-
             <button
-              disabled={carrito.length === 0}
-              onClick={() => setModalAbierto(true)}
+              disabled={
+                carrito.length === 0
+              }
+              onClick={() =>
+                setModalAbierto(true)
+              }
               className={`
+
                 w-full
                 mt-3
                 py-2
@@ -617,103 +888,213 @@ const productosFiltrados = productos.filter((producto)=>{
 
                 ${
                   carrito.length === 0
+
                     ? "bg-white/5 text-white/30 cursor-not-allowed"
+
                     : "bg-[#6db56d]/20 text-[#a8d5a8] hover:bg-[#6db56d]/30"
                 }
+
               `}
             >
               Finalizar Venta
             </button>
 
-
           </div>
-
 
         </aside>
 
-
       </div>
-  
-  <ProductQuickModal
-  producto={productoSeleccionado}
-  open={!!productoSeleccionado}
-  onClose={()=>{
-    setProductoSeleccionado(null);
-  }}
-/>
 
 
+      {/* ================================= */}
+      {/* PRODUCT QUICK MODAL */}
+      {/* ================================= */}
 
+      <ProductQuickModal
 
-      <SaleModal
-        open={modalAbierto}
-        total={subtotal}
-        onClose={() => setModalAbierto(false)}
-onConfirm={async () => {
+        producto={
+          productoSeleccionado
+        }
 
-  console.log("🔥 CLICK FINALIZAR VENTA");
+        open={
+          !!productoSeleccionado
+        }
 
-  console.log(
-    "CARRITO:",
-    carrito
-  );
+        onClose={() => {
 
-  try {
+          setProductoSeleccionado(
+            null
+          );
 
-const venta = await finalizarVenta(carrito);
+        }}
 
-console.log(
-  "VENTA RETORNADA:",
-  venta
-);
-
-// Mostrar el siguiente número
-setNumeroVenta(
-  String(venta.folio + 1).padStart(6, "0")
-);
-
-alert("Venta realizada correctamente.");
-
-vaciarCarrito();
-
-setModalAbierto(false);
-
-
-  } catch (error) {
-
-    console.error(
-      "ERROR FINALIZAR VENTA:",
-      error
-    );
-
-    alert(
-      "No se pudo registrar la venta."
-    );
-
-  }
-
-}}
       />
 
 
+      {/* ================================= */}
+      {/* SALE MODAL */}
+      {/* ================================= */}
+
+      <SaleModal
+
+        open={
+          modalAbierto
+        }
+
+        total={
+          subtotal
+        }
+
+        onClose={() =>
+          setModalAbierto(false)
+        }
+
+
+        onConfirm={
+          async () => {
+
+            console.log(
+              "🔥 CLICK FINALIZAR VENTA"
+            );
+
+
+            console.log(
+              "CARRITO:",
+              carrito
+            );
+
+
+            try {
+
+              // =================================
+              // REGISTRAR VENTA
+              // =================================
+
+              const venta =
+                await finalizarVenta(
+                  carrito
+                );
+
+
+              console.log(
+                "VENTA RETORNADA:",
+                venta
+              );
+
+
+              // =================================
+              // ACTUALIZAR NÚMERO DE VENTA
+              // =================================
+
+              setNumeroVenta(
+
+                String(
+                  venta.folio + 1
+                ).padStart(
+                  6,
+                  "0"
+                )
+
+              );
+              await cargarProductos();
+
+              // =================================
+              // GUARDAR TICKET
+              // =================================
+
+              setTicket(
+                venta
+              );
+
+
+              // =================================
+              // LIMPIAR CARRITO
+              // =================================
+
+              vaciarCarrito();
+
+
+              // =================================
+              // CERRAR MODAL
+              // =================================
+
+              setModalAbierto(
+                false
+              );
+
+
+            } catch (error) {
+
+              console.error(
+                "ERROR FINALIZAR VENTA:",
+                error
+              );
+
+
+              alert(
+                "No se pudo registrar la venta."
+              );
+
+            }
+
+          }
+        }
+
+      />
+
+
+      {/* ================================= */}
+      {/* TICKET */}
+      {/* ================================= */}
+
+      <TicketVenta
+
+        ticket={
+          ticket
+        }
+
+        open={
+          !!ticket
+        }
+
+        onClose={() => {
+
+          setTicket(
+            null
+          );
+
+        }}
+
+      />
+
     </>
+
   );
+
 }
 
 
-
-
+// =====================================
+// INFO CARD
+// =====================================
 
 function InfoCard({
-  title,
-  value,
-  highlight = false,
-}: {
-  title: string;
-  value: string;
-  highlight?: boolean;
-}) {
 
+  title,
+
+  value,
+
+  highlight = false,
+
+}: {
+
+  title: string;
+
+  value: string;
+
+  highlight?: boolean;
+
+}) {
 
   return (
 
@@ -727,7 +1108,12 @@ function InfoCard({
       "
     >
 
-      <p className="text-[11px] text-white/30">
+      <p
+        className="
+          text-[11px]
+          text-white/30
+        "
+      >
         {title}
       </p>
 
@@ -737,6 +1123,7 @@ function InfoCard({
           mt-1
           text-sm
           font-medium
+
           ${
             highlight
               ? "text-[#a8d5a8]"
@@ -746,7 +1133,6 @@ function InfoCard({
       >
         {value}
       </p>
-
 
     </div>
 

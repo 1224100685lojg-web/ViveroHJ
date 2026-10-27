@@ -279,10 +279,47 @@ async function cargarMovimientos() {
 }
 
 useEffect(() => {
-  if (!movimientosExternos) {
-    void cargarMovimientos();
+  if (movimientosExternos) {
+    return;
   }
-}, [movimientosExternos, onStatsChange]);
+
+  // Cargar inicialmente
+  void cargarMovimientos();
+
+  // Escuchar cambios en tiempo real
+  const canal = supabase
+    .channel("movimientos-inventario-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "movimientos_inventario",
+      },
+      (payload) => {
+        console.log(
+          "🔄 CAMBIO EN MOVIMIENTOS:",
+          payload
+        );
+
+        void cargarMovimientos();
+      }
+    )
+    .subscribe((status) => {
+      console.log(
+        "📡 REALTIME MOVIMIENTOS:",
+        status
+      );
+    });
+
+  return () => {
+    console.log(
+      "🔌 Desconectando realtime movimientos"
+    );
+
+    supabase.removeChannel(canal);
+  };
+}, [movimientosExternos]);
 
 
 const movimientosFiltrados = useMemo(() => {

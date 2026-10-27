@@ -10,6 +10,9 @@ export type ProductoVenta = {
 };
 
 
+// =====================================
+// FINALIZAR VENTA
+// =====================================
 
 export async function finalizarVenta(
   carrito: ProductoVenta[],
@@ -20,13 +23,14 @@ export async function finalizarVenta(
   console.log("========== INICIANDO VENTA ==========");
 
 
-  // Obtener sesión
+  // =====================================
+  // OBTENER SESIÓN
+  // =====================================
 
   const {
     data: sessionData,
     error: sessionError,
   } = await supabase.auth.getSession();
-
 
 
   console.log(
@@ -47,8 +51,7 @@ export async function finalizarVenta(
   );
 
 
-
-  if(sessionError){
+  if (sessionError) {
 
     console.error(
       "ERROR SESSION:",
@@ -60,12 +63,10 @@ export async function finalizarVenta(
   }
 
 
-
   const user = sessionData.session?.user;
 
 
-
-  if(!user){
+  if (!user) {
 
     throw new Error(
       "No hay usuario autenticado."
@@ -74,26 +75,21 @@ export async function finalizarVenta(
   }
 
 
-
-  // Buscar usuario interno
-
+  // =====================================
+  // BUSCAR USUARIO INTERNO
+  // =====================================
 
   const {
     data: usuario,
     error: usuarioError,
   } = await supabase
-
     .from("usuarios")
-
     .select("*")
-
     .eq(
       "auth_user_id",
       user.id
     )
-
     .single();
-
 
 
   console.log(
@@ -108,8 +104,7 @@ export async function finalizarVenta(
   );
 
 
-
-  if(usuarioError || !usuario){
+  if (usuarioError || !usuario) {
 
     throw new Error(
       "No se encontró el empleado."
@@ -118,22 +113,17 @@ export async function finalizarVenta(
   }
 
 
-
-  // Calcular subtotal
-
+  // =====================================
+  // CALCULAR SUBTOTAL
+  // =====================================
 
   const subtotal = carrito.reduce(
-
-    (total, producto)=>
-
+    (total, producto) =>
       total +
       producto.precio *
       producto.cantidad,
-
     0
-
   );
-
 
 
   console.log(
@@ -142,15 +132,30 @@ export async function finalizarVenta(
   );
 
 
+  // =====================================
+  // CREAR VENTA
+  // =====================================
 
-const datosVenta = {
-  cliente_id: clienteId ?? null,
-  usuario_id: usuario.id,
-  subtotal,
-  total: subtotal,
-  metodo_pago: metodoPago,
-  estado: "completada",
-};
+  const datosVenta = {
+
+    cliente_id:
+      clienteId ?? null,
+
+    usuario_id:
+      usuario.id,
+
+    subtotal,
+
+    total:
+      subtotal,
+
+    metodo_pago:
+      metodoPago,
+
+    estado:
+      "completada",
+
+  };
 
 
   console.log(
@@ -159,16 +164,14 @@ const datosVenta = {
   );
 
 
-
-const {
-  data: venta,
-  error: ventaError,
-} = await supabase
-  .from("ventas")
-  .insert(datosVenta)
-  .select("id, folio")
-  .single();
-
+  const {
+    data: venta,
+    error: ventaError,
+  } = await supabase
+    .from("ventas")
+    .insert(datosVenta)
+    .select("id, folio, fecha")
+    .single();
 
 
   console.log(
@@ -183,20 +186,18 @@ const {
   );
 
 
-
-  if(ventaError){
+  if (ventaError) {
 
     throw ventaError;
 
   }
 
 
+  // =====================================
+  // GUARDAR PRODUCTOS VENDIDOS
+  // =====================================
 
-  // Guardar productos vendidos
-
-
-  for(const producto of carrito){
-
+  for (const producto of carrito) {
 
     console.log(
       "INSERTANDO DETALLE:",
@@ -204,14 +205,10 @@ const {
     );
 
 
-
     const {
       error: detalleError
-
     } = await supabase
-
       .from("detalle_ventas")
-
       .insert({
 
         venta_id:
@@ -233,23 +230,22 @@ const {
       });
 
 
-
     console.log(
       "ERROR DETALLE:",
       detalleError
     );
 
 
-
-    if(detalleError){
+    if (detalleError) {
 
       throw detalleError;
 
     }
 
 
-
-    // Actualizar inventario
+    // =====================================
+    // ACTUALIZAR INVENTARIO
+    // =====================================
 
     await actualizarStock(
 
@@ -261,28 +257,162 @@ const {
     );
 
 
+    // =====================================
+    // REGISTRAR MOVIMIENTO
+    // =====================================
 
-    // Registrar movimiento
+    await registrarMovimiento({
 
+      producto_id:
+        producto.id,
 
-await registrarMovimiento({
-  producto_id: producto.id,
-  usuario_id: usuario.id,
-  tipo: "SALIDA",
-  cantidad: producto.cantidad,
-  motivo: "Venta",
-  observaciones: `Venta ${venta.id}`,
-});
+      usuario_id:
+        usuario.id,
+
+      tipo:
+        "SALIDA",
+
+      cantidad:
+        producto.cantidad,
+
+      motivo:
+        "Venta",
+
+      observaciones:
+        `Venta ${venta.id}`,
+
+    });
 
   }
+
+
+  // =====================================
+  // OBTENER NOMBRES DE LOS PRODUCTOS
+  // PARA EL TICKET
+  // =====================================
+
+  const idsProductos =
+    carrito.map(
+      producto => producto.id
+    );
+
+
+  const {
+    data: productosTicket,
+    error: productosError,
+  } = await supabase
+    .from("productos")
+    .select(`
+      id,
+      nombre
+    `)
+    .in(
+      "id",
+      idsProductos
+    );
+
+
+  console.log(
+    "PRODUCTOS PARA TICKET:",
+    productosTicket
+  );
+
+
+  if (productosError) {
+
+    console.error(
+      "ERROR OBTENIENDO PRODUCTOS PARA TICKET:",
+      productosError
+    );
+
+  }
+
+
+  // =====================================
+  // PREPARAR PRODUCTOS DEL TICKET
+  // =====================================
+
+  const productosTicketFinal =
+    carrito.map(producto => {
+
+      const productoDB =
+        productosTicket?.find(
+          item =>
+            item.id === producto.id
+        );
+
+
+      return {
+
+        id:
+          producto.id,
+
+        nombre:
+          productoDB?.nombre ??
+          "Producto",
+
+        cantidad:
+          producto.cantidad,
+
+        precio:
+          producto.precio,
+
+        subtotal:
+          producto.precio *
+          producto.cantidad,
+
+      };
+
+    });
+
+
+  // =====================================
+  // DATOS COMPLETOS DE LA VENTA
+  // =====================================
+
+  const ticket = {
+
+    id:
+      venta.id,
+
+    folio:
+      venta.folio,
+
+    fecha:
+      venta.fecha,
+
+    subtotal,
+
+    total:
+      subtotal,
+
+    metodoPago,
+
+    usuario:
+      usuario.nombre,
+
+    productos:
+      productosTicketFinal,
+
+  };
+
+
+  console.log(
+    "========== TICKET =========="
+  );
+
+
+  console.log(
+    ticket
+  );
+
 
   console.log(
     "========== VENTA TERMINADA =========="
   );
 
 
-
-  return venta;
+  return ticket;
 
 }
 
@@ -296,13 +426,11 @@ await registrarMovimiento({
 // =====================================
 
 
-export async function obtenerHistorialVentas(){
-
+export async function obtenerHistorialVentas() {
 
   console.log(
     "========== CARGANDO HISTORIAL =========="
   );
-
 
 
   const {
@@ -356,11 +484,10 @@ export async function obtenerHistorialVentas(){
       "fecha",
 
       {
-        ascending:false
+        ascending: false
       }
 
     );
-
 
 
   console.log(
@@ -375,34 +502,38 @@ export async function obtenerHistorialVentas(){
   );
 
 
-
-  if(error){
+  if (error) {
 
     throw error;
 
   }
 
 
-
   return data ?? [];
 
 }
+
 
 // =====================================
 // REPORTES DE VENTAS
 // =====================================
 
 export async function obtenerVentas() {
+
   console.log(
     "========== CARGANDO VENTAS =========="
   );
+
 
   const {
     data,
     error,
   } = await supabase
+
     .from("ventas")
+
     .select(`
+
       id,
       fecha,
       subtotal,
@@ -411,24 +542,36 @@ export async function obtenerVentas() {
       estado,
       usuario_id,
       cliente_id
+
     `)
-    .order("fecha", {
-      ascending: true,
-    });
+
+    .order(
+      "fecha",
+      {
+        ascending: true,
+      }
+    );
+
 
   console.log(
     "VENTAS:",
     data
   );
 
+
   console.log(
     "ERROR:",
     error
   );
 
+
   if (error) {
+
     throw error;
+
   }
 
+
   return data ?? [];
+
 }

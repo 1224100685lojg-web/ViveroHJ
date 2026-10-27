@@ -139,6 +139,9 @@ async function createWindow() {
     await waitForServer(NEXT_URL);
 
     await mainWindow.loadURL(NEXT_URL);
+
+mainWindow.webContents.openDevTools();
+    
   } catch (error) {
     console.error(
       "Error iniciando aplicación:",
