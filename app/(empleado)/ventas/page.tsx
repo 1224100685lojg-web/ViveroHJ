@@ -18,6 +18,7 @@ import { useCart } from "../_components/CartContext";
 import { useSearch } from "@/context/SearchContext";
 import { finalizarVenta } from "@/lib/ventas";
 import { supabase } from "@/lib/supabase";
+import { ChevronUp, ChevronDown, ShoppingCart, Trash2 } from "lucide-react";
 
 
 export default function VentasPage() {
@@ -73,6 +74,12 @@ export default function VentasPage() {
     numeroVenta,
     setNumeroVenta
   ] = useState("000001");
+
+  // Estado para expandir o colapsar el carrito en celulares
+  const [
+    carritoAbierto,
+    setCarritoAbierto
+  ] = useState(false);
 
 
   // =====================================
@@ -166,7 +173,7 @@ export default function VentasPage() {
       .single();
 
 
-    setCajero(
+    setCargando(
 
       usuario?.nombre ??
 
@@ -350,6 +357,7 @@ export default function VentasPage() {
         <section
           className="
             lg:col-span-9
+            pb-32 lg:pb-0
           "
         >
 
@@ -631,25 +639,49 @@ export default function VentasPage() {
         {/* ================================= */}
 
         <aside
-          className="
+          className={`
             lg:col-span-3
-            bg-white/[0.03]
-            border
-            border-white/5
-            rounded-xl
-            p-5
+            bg-[#121f12]
+            border-t lg:border
+            border-white/10 lg:border-white/5
+            rounded-t-2xl lg:rounded-xl
+            p-4 lg:p-5
+            fixed bottom-0 left-0 right-0 z-40
+            shadow-[0_-10px_25px_rgba(0,0,0,0.5)]
             lg:sticky
             lg:top-5
-            h-[calc(100vh-40px)]
+            lg:h-[calc(100vh-40px)]
+            lg:shadow-none
             flex
             flex-col
-          "
+            transition-all
+            duration-300
+          `}
         >
+
+          {/* BOTÓN TOGGLE PARA CELULARES (Abre/Cierra el carrito) */}
+          <div 
+            onClick={() => setCarritoAbierto(!carritoAbierto)}
+            className="flex lg:hidden justify-between items-center pb-2 cursor-pointer border-b border-white/5 mb-2"
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingCart size={18} className="text-[#a8d5a8]" />
+              <span className="text-white text-sm font-medium">
+                Carrito ({totalArticulos} arts)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[#a8d5a8] font-bold text-sm">
+                ${subtotal.toFixed(2)}
+              </span>
+              {carritoAbierto ? <ChevronDown size={18} className="text-white/70" /> : <ChevronUp size={18} className="text-white/70" />}
+            </div>
+          </div>
 
 
           <div
             className="
-              flex
+              hidden lg:flex
               justify-between
               items-center
               border-b
@@ -710,75 +742,92 @@ export default function VentasPage() {
 
 
           {/* ================================= */}
-          {/* CONTENIDO CARRITO */}
+          {/* CONTENIDO CARRITO (Se oculta en celular si carritoAbierto es falso) */}
           {/* ================================= */}
 
-          {carrito.length === 0 ? (
+          <div className={`${carritoAbierto ? "block" : "hidden"} lg:block flex-1 overflow-hidden flex flex-col`}>
 
-            <div
-              className="
-                py-12
-                text-center
-              "
-            >
+            {carrito.length === 0 ? (
 
               <div
                 className="
-                  text-5xl
+                  py-6 lg:py-12
+                  text-center
                 "
               >
-                🛒
+
+                <div
+                  className="
+                    text-3xl lg:text-5xl
+                  "
+                >
+                  🛒
+                </div>
+
+
+                <p
+                  className="
+                    text-white text-sm lg:text-base
+                    mt-1 lg:mt-3
+                  "
+                >
+                  Carrito vacío
+                </p>
+
+
+                <p
+                  className="
+                    text-xs
+                    text-white/30
+                    mt-0.5 lg:mt-1
+                  "
+                >
+                  Agrega productos para comenzar.
+                </p>
+
               </div>
 
+            ) : (
 
-              <p
-                className="
-                  text-white
-                  mt-3
-                "
-              >
-                Carrito vacío
-              </p>
+              <>
+                {/* Botón vaciar visible en versión expandida de celular */}
+                <div className="flex lg:hidden justify-between items-center py-2 text-xs border-b border-white/5 mb-2">
+                  <span className="text-white/40">Productos agregados</span>
+                  <button
+                    onClick={vaciarCarrito}
+                    className="text-red-300 flex items-center gap-1"
+                  >
+                    <Trash2 size={12} /> Vaciar carrito
+                  </button>
+                </div>
 
+                <div
+                  className="
+                    space-y-2 lg:space-y-3
+                    py-2 lg:py-4
+                    max-h-[35vh] lg:max-h-[55vh]
+                    overflow-y-auto
+                    pr-2
+                  "
+                >
 
-              <p
-                className="
-                  text-xs
-                  text-white/30
-                  mt-1
-                "
-              >
-                Agrega productos para comenzar.
-              </p>
+                  {carrito.map(
+                    (producto) => (
 
-            </div>
+                      <CartItem
+                        key={producto.id}
+                        producto={producto}
+                      />
 
-          ) : (
+                    )
+                  )}
 
-            <div
-              className="
-                space-y-3
-                py-4
-                max-h-[55vh]
-                overflow-y-auto
-                pr-2
-              "
-            >
+                </div>
+              </>
 
-              {carrito.map(
-                (producto) => (
+            )}
 
-                  <CartItem
-                    key={producto.id}
-                    producto={producto}
-                  />
-
-                )
-              )}
-
-            </div>
-
-          )}
+          </div>
 
 
           {/* ================================= */}
@@ -789,18 +838,16 @@ export default function VentasPage() {
             className="
               border-t
               border-white/5
-              pt-4
+              pt-3 lg:pt-4
               pb-1
-              sticky
-              bottom-0
-              bg-[#162716]
+              bg-[#121f12]
               mt-auto
             "
           >
 
             <div
               className="
-                flex
+                hidden lg:flex
                 justify-between
                 text-sm
                 text-white/40
@@ -820,7 +867,7 @@ export default function VentasPage() {
 
             <div
               className="
-                flex
+                hidden lg:flex
                 justify-between
                 text-sm
                 text-white/40
@@ -841,9 +888,10 @@ export default function VentasPage() {
 
             <div
               className="
-                flex
+                hidden lg:flex
                 justify-between
                 mt-2
+                items-center
               "
             >
 
@@ -880,10 +928,11 @@ export default function VentasPage() {
               className={`
 
                 w-full
-                mt-3
-                py-2
-                rounded-lg
+                mt-2 lg:mt-3
+                py-2.5 lg:py-2
+                rounded-xl lg:rounded-lg
                 text-sm
+                font-semibold lg:font-medium
                 transition
 
                 ${
@@ -891,7 +940,7 @@ export default function VentasPage() {
 
                     ? "bg-white/5 text-white/30 cursor-not-allowed"
 
-                    : "bg-[#6db56d]/20 text-[#a8d5a8] hover:bg-[#6db56d]/30"
+                    : "bg-[#6db56d]/30 text-[#a8d5a8] hover:bg-[#6db56d]/40 shadow-lg"
                 }
 
               `}
